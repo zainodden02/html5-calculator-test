@@ -1,14 +1,29 @@
 package functions;
 
 import config.DriverSetup;
+import constants.XPath;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
+import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Calculator {
+    private static final Logger logger = LogManager.getLogger();
     private static List<Integer> numbers = new ArrayList(Arrays.asList(
             KeyEvent.VK_0,
             KeyEvent.VK_1,
@@ -56,7 +71,7 @@ public class Calculator {
      * Add all the given values
      *
      * @param val The values to add.
-     * @throws AWTException
+     * @throws Exception
      */
     public static Double add(String... val) throws Exception {
         return compute("+", val);
@@ -66,17 +81,78 @@ public class Calculator {
      * Subtract all the given values
      *
      * @param val The values to subtract.
-     * @throws AWTException
+     * @throws Exception
      */
     public static Double subtract(String... val) throws Exception {
         return compute("-", val);
     }
 
     /**
+     * Multiply all the given values
+     *
+     * @param val The values to subtract.
+     * @throws Exception
+     */
+    public static Double multiply(String... val) throws Exception {
+        return compute("*", val);
+    }
+
+    /**
+     * Divide all the given values
+     *
+     * @param val The values to subtract.
+     * @throws Exception
+     */
+    public static Double divide(String... val) throws Exception {
+        return compute("/", val);
+    }
+
+    /**
      * Returns the integer code of the clear action.
      */
-    public static void clear() throws AWTException {
+    public static void clear() throws Exception {
         press("C");
+    }
+
+    /**
+     * Capture and get the total value displayed on the display panel of the calculator.
+     * @return The computed value as displayed on the calculator.
+     * @throws Exception
+     */
+    public static double getResult() throws Exception {
+        // Tesseract API to read text values from an image.
+        ITesseract tesseract = new Tesseract();
+        tesseract.setDatapath("tessdata\\");
+        tesseract.setTessVariable("user_defined_dpi", "300");
+        tesseract.setTessVariable("tessedit_char_blacklist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+        File canvasImg = new File("target/screenshots/" + DateUtil.getCurrentDate() + "_Canvas.png");
+
+        // Take a screenshot of the calculator canvas
+        FileUtils.copyFile(DriverSetup.driver.findElement(By.xpath(XPath.CANVAS)).getScreenshotAs(OutputType.FILE),
+                canvasImg);
+
+        BufferedImage buffImg  = ImageIO.read(canvasImg);
+
+        int imgWidth = buffImg.getWidth();
+        int imgHeight = buffImg.getHeight();
+
+        // Divide the current height by 6 to get the results only
+        int expectedHeight = imgHeight / 6;
+
+        // Crop the image to get the display panel of the calculator. The Tesseract API can better convert the image
+        // to text by minimizing the data on the image through cropping.
+        BufferedImage croppedImg = buffImg.getSubimage(0, 0, imgWidth, expectedHeight);
+        File croppedImgFile = new File("target/screenshots/" + DateUtil.getCurrentDate() + "_TotalResult.png");
+        ImageIO.write(croppedImg,"png", croppedImgFile);
+
+        // Replace all new line breaks and spaces.
+        String output = tesseract.doOCR(croppedImgFile).replaceAll("[\\r\\n]+", "").replace(" ", "");
+        logger.info("Calculator Output: {}", output); // For debugging purposes
+        Matcher matcher = Pattern.compile("[+-]?\\b\\d+(?:\\.\\d+)?\\b").matcher(output);
+
+        output = matcher.find() ? matcher.group(0) : null;
+        return Double.parseDouble(output);
     }
 
     /**
@@ -85,7 +161,7 @@ public class Calculator {
      * @param s Accepts 0-9, +, -, /, *, C, ., and =.
      * @return The corresponding integer code.
      */
-    public static void press(String s) throws AWTException {
+    public static void press(String s) throws Exception {
         Robot robot = new Robot();
         Integer event = 0;
 
@@ -123,8 +199,8 @@ public class Calculator {
 
     private static Double getTotal(String operator, String... val) {
         List<String> operands = new ArrayList(Arrays.asList(val));
-        Double total = 0.0;
-        for (int i = 0; i < operands.size(); i++) {
+        Double total = Double.parseDouble(operands.get(0));
+        for (int i = 1; i < operands.size(); i++) {
             switch (operator) {
                 case "/":
                     total /= Double.parseDouble(operands.get(i));
