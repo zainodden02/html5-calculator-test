@@ -1,6 +1,8 @@
 # Xendit QA Assessment
 
 ---
+> To view the actual test execution of the test scripts, please view (or download) the recording here: 
+> [Xendit QA Assessment](https://drive.google.com/file/d/1EozJNjUsEXOH6R1nQm2Ms7AFtRMyfanw/view?usp=sharing)
 
 ## WHAT'S IN THIS REPOSITORY?
 1. Prerequisites
@@ -29,6 +31,9 @@ The scripts use the Robot framework to send a Keyboard event on the browser to i
 the actions, the script will take a screenshot of the canvas and will retrieve the computed value as displayed on the display
 panel of the calculator. The retrieved value from the calculator is compared against the total value of the given data. This approach 
 was made possible through the use of Tesseract OCR library.
+
+The screenshots are stored in `target/screenshots` directory. The file with `_TotalResults` suffix is used to 
+capture the value on the display panel.
 
 #### How to execute the scripts?
 A test plan named `TestPlan.xml` is located in the test plan package. This can be used to run all the test scripts in the same
