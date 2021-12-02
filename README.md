@@ -1,8 +1,8 @@
-# Xendit QA Assessment
+# HTML5 Calculator Test
 
 ---
 > To view the actual test execution of the test scripts, please view (or download) the recording here: 
-> [Xendit QA Assessment](https://drive.google.com/file/d/1EozJNjUsEXOH6R1nQm2Ms7AFtRMyfanw/view?usp=sharing)
+> [HTML5 Calculator Test](https://drive.google.com/file/d/1EozJNjUsEXOH6R1nQm2Ms7AFtRMyfanw/view?usp=sharing)
 
 ## WHAT'S IN THIS REPOSITORY?
 1. Prerequisites
